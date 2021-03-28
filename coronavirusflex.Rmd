@@ -1,0 +1,201 @@
+---
+title: "Coronavirus flexdashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+#------------------ Packages ------------------
+library(flexdashboard)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(coronavirus)
+library(leaflet)
+library(plotly)
+library(tidyr)
+```
+
+``` {r global, include=FALSE}
+#-----------------Data--------------------
+
+## confirmed cases data 
+
+confirmed <-read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")   %>%
+  pivot_longer(-c('Province/State','Country/Region',Lat,Long), 
+               names_to= "date",
+               values_to= "confirmed_n") %>%
+  select(-c(Lat,Long)) %>%
+  rename(province_state='Province/State',
+         country_region='Country/Region') %>%
+  mutate(date=mdy(date)) %>%
+  group_by(country_region,date) %>%
+  arrange(date) %>%
+  group_by(country_region) %>%
+  mutate(new_cases_n=confirmed_n-lag(confirmed_n, default = 0)) %>%
+  ungroup() 
+
+## deaths data
+
+deaths <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")  %>%
+pivot_longer(-c('Province/State','Country/Region',Lat,Long), 
+               names_to= "date",
+               values_to= "confirmed_n") %>%
+  select(-c(Lat,Long)) %>%
+  rename(province_state='Province/State',
+         country_region='Country/Region') %>%
+  mutate(date=mdy(date)) %>%
+  group_by(country_region,date) %>%
+  arrange(date) %>%
+  group_by(country_region) %>%
+  mutate(new_cases_n=confirmed_n-lag(confirmed_n, default = 0)) %>%
+  ungroup() 
+  
+## recoveries data
+
+recovered <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")  %>%
+pivot_longer(-c('Province/State','Country/Region',Lat,Long), 
+               names_to= "date",
+               values_to= "confirmed_n") %>%
+  select(-c(Lat,Long)) %>%
+  rename(province_state='Province/State',
+         country_region='Country/Region') %>%
+  mutate(date=mdy(date)) %>%
+  group_by(country_region,date) %>%
+  arrange(date) %>%
+  group_by(country_region) %>%
+  mutate(new_cases_n=confirmed_n-lag(confirmed_n, default = 0)) %>%
+  ungroup()   
+
+```
+
+Inputs {.sidebar}
+-------------------------------------------------
+
+This is an interactive dashboard that allows time-series COVID data to be plotted for select countries. 
+
+
+
+``` {r}
+
+## Country input
+
+checkboxGroupInput("countries", strong("Countries:"),
+    c("Italy", "Spain", "Germany"), selected = "Italy"
+)
+
+## Outcome type input
+
+# drop-down
+selectInput("outcome", label = strong("Outcome of interest:"),
+            choices = c("Deaths", "Cases", "Recoveries"), selected = "Cases"
+           )
+# get outcome text for labels
+getOutcome <- reactive({
+  outcometext = print(input$outcome)
+})
+
+## Smoothing input
+
+checkboxInput("smooth", strong("Line smoothing"), value = TRUE)
+
+## 
+radioButtons("scale", strong("Data Scale:"), c("Raw" = "rawscale", "Natural log" = "logscale"), selected = "Raw")
+
+radioButtons("startdate", strong("Starting date:"), c("Calendar date" = "caldate", "Time since first case" = "firstcase"), selected = 
+               "Calendar date")
+
+## select natural log or raw scale
+## select smoothed or unsmoothed
+## select deaths, recoveries, or cases
+## select starting by calendar date or time since first case
+```
+
+Row
+--------------------------------------------------
+
+### Time-series data for COVID `r renderText(getOutcome())` 
+
+``` {r}
+
+## render plot
+
+
+renderPlotly({
+
+if (input$outcome == "Cases")
+  
+  confirmed %>%  ## outcome data of interest
+    
+    filter(country_region %in% c(input$countries)) %>%   ## selects country
+    ## need to select scale
+      
+  ## call up ggplot  
+ggplot(aes(x=date, y=new_cases_n, color=country_region)) +
+  geom_line(show.legend = FALSE) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~country_region, ncol=1, scales="free_y") +
+  labs(x="Date",y="Count",
+       title= paste("COVID-19 Confirmed Cases (Feb 20-Mar 21)")) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  
+  
+  
+  ## smoothing
+ ## if (input$smooth)
+   ## p <- p + geom_smooth()
+
+else if (input$outcome == "Deaths")
+  
+  deaths %>%  ## outcome data of interest
+    
+    filter(country_region %in% c(input$countries)) %>%   ## selects country
+    ## need to select scale
+      
+  ## call up ggplot  
+ggplot(aes(x=date, y=new_cases_n, color=country_region)) +
+  geom_line(show.legend = FALSE) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~country_region, ncol=1, scales="free_y") +
+  labs(x="Date",y="Count",
+       title= paste("COVID-19 Deaths (Feb 20-Mar 21)")) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  
+
+else if (input$outcome == "Recoveries")
+  
+  recovered %>%  ## outcome data of interest
+    
+    filter(country_region %in% c(input$countries)) %>%   ## selects country
+    ## need to select scale
+      
+  ## call up ggplot  
+ggplot(aes(x=date, y=new_cases_n, color=country_region)) +
+  geom_line(show.legend = FALSE) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~country_region, ncol=1, scales="free_y") +
+  labs(x="Date",y="Count",
+       title= paste("COVID-19 Recoveries (Feb 20-Mar 21)")) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))   
+ 
+## smoothing
+## if (input$smooth)
+   ## p <- p + geom_smooth()
+  
+  
+
+})
+  
+
+
+```
+
+
+Row 
+---------------------------------------------------
+
+### Map showing selected country
+
