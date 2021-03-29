@@ -19,7 +19,7 @@ Data for this dashboard come from the R package [coronavirus](https://github.com
 ### R packages 
 
 
-+ **Interface: **  `flexdashboard`, `shiny`
++ **Interface:**  `flexdashboard`, `shiny`
 
 + **Data conversion & manipulation: ** `dplyr`, `tidyr`
 
