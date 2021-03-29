@@ -11,12 +11,13 @@ This is a coronavirus flexdashboard app that allows the user to display differen
 + Raw data or a natural log transformation
 + Start date for time series 
 
+
 ### Data
 
 Data for this dashboard come from the R package [coronavirus](https://github.com/RamiKrispin/coronavirus). Raw data were downloaded from the [COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)
 
 
-### R packages 
+### R packages: 
 
 
 + **Interface:**  `flexdashboard`, `shiny`
