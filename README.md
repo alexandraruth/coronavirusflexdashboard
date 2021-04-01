@@ -21,14 +21,14 @@ Data for this dashboard come from the R package [coronavirus](https://github.com
 ### R packages 
 
 
-+ **Interface: **  `flexdashboard`, `shiny`
++ **Interface:**  `flexdashboard`, `shiny`
 
-+ **Data conversion & manipulation: ** `dplyr`, `tidyr`
++ **Data conversion & manipulation:** `dplyr`, `tidyr`
 
-+ **Plotting: ** `plotly`, `ggplot2`
++ **Plotting:** `plotly`, `ggplot2`
 
-+ **Mapping: ** `leaflet`
++ **Mapping:** `leaflet`
 
-+ **Data source: **`coronavirus`
++ **Data source:**`coronavirus`
 
 
